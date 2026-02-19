@@ -8,32 +8,26 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    environment: production
     permissions:
       contents: write
-      packages: read
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Use Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: '18.x'
-          registry-url: 'https://npm.pkg.github.com'
-          scope: '@nutstore'
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v2
+        uses: pnpm/action-setup@v4
         with:
           version: latest
 
       - name: Build plugin
         env:
-          NS_NSDAV_ENDPOINT: ${{ vars.NS_NSDAV_ENDPOINT }}
-          NS_DAV_ENDPOINT: ${{ vars.NS_DAV_ENDPOINT }}
-          NUTSTORE_PAT: ${{ secrets.GITHUB_TOKEN }}
+          NS_NSDAV_ENDPOINT: ${{ vars.NS_NSDAV_ENDPOINT || 'https://dav.jianguoyun.com/nsdav' }}
+          NS_DAV_ENDPOINT: ${{ vars.NS_DAV_ENDPOINT || 'https://dav.jianguoyun.com/dav' }}
           NODE_ENV: production
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           pnpm install
           pnpm run build
@@ -54,7 +48,7 @@ jobs:
 
           gh release create "$tag" \
             --title="$tag" \
-            --draft \
+            --latest \
             main.js manifest.json styles.css \
             ${{ github.event.repository.name }}-${tag}.zip \
             ${{ github.event.repository.name }}-${tag}.tar.gz
